@@ -1,0 +1,107 @@
+stages:
+  - build:java
+  - build:docker
+  - build:manifest
+
+java-build:
+  stage: build:java
+  image: maven:3.8.1-openjdk-11-slim
+  script:
+    - cd sources
+    - mvn package
+  artifacts:
+    paths:
+      - sources/target/socket-server-1.0-SNAPSHOT.jar
+  when: manual
+
+docker-build-amd64:
+  stage: build:docker
+  image: 
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [""]
+  script:
+    - mkdir -p /kaniko/.docker
+    - echo "{\"auths\":{\"${CI_REGISTRY}\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USER}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" > /kaniko/.docker/config.json
+    - >-
+      /kaniko/executor
+      --context "${CI_PROJECT_DIR}/sources"
+      --dockerfile "${CI_PROJECT_DIR}/docker/Dockerfile"
+      --destination "${CI_REGISTRY_IMAGE}:latest-amd64"
+      --customPlatform "linux/amd64"
+  when: always 
+
+docker-build-arm64:
+  stage: build:docker
+  image: docker:latest
+  variables:
+    DOCKER_TLS_CERTDIR: "/certs"
+  services:
+    - name: docker:dind
+      command:
+        - "--experimental"
+  tags:
+    - buildx
+  before_script:
+    - mkdir -p ~/.docker/cli-plugins
+    - wget -q -O ~/.docker/cli-plugins/docker-buildx https://github.com/docker/buildx/releases/download/v0.7.1/buildx-v0.7.1.linux-amd64
+    - chmod a+x ~/.docker/cli-plugins/docker-buildx
+    - docker context create builder$CI_JOB_ID
+    - docker buildx create builder$CI_JOB_ID --use
+    - echo "${CI_REGISTRY_PASSWORD}" | docker login -u ${CI_REGISTRY_USER} --password-stdin ${CI_REGISTRY}
+  script:
+    - cd ${CI_PROJECT_DIR}/sources
+    - docker buildx build 
+      --platform linux/arm64 
+      --tag ${CI_REGISTRY_IMAGE}:latest-arm64 
+      --file ${CI_PROJECT_DIR}/docker/Dockerfile 
+      --push 
+      .
+  when: always
+
+docker-build-multi-arch:
+  stage: build:docker
+  image: docker:latest
+  variables:
+    DOCKER_TLS_CERTDIR: "/certs"
+  services:
+    - name: docker:dind
+      command:
+        - "--experimental"
+  tags:
+    - buildx
+  before_script:
+    - mkdir -p ~/.docker/cli-plugins
+    - wget -q -O ~/.docker/cli-plugins/docker-buildx https://github.com/docker/buildx/releases/download/v0.7.1/buildx-v0.7.1.linux-amd64
+    - chmod a+x ~/.docker/cli-plugins/docker-buildx
+    - docker context create builder$CI_JOB_ID
+    - docker buildx create builder$CI_JOB_ID --use
+    - echo "${CI_REGISTRY_PASSWORD}" | docker login -u ${CI_REGISTRY_USER} --password-stdin ${CI_REGISTRY}
+  script:
+    - echo TEST:${CI_PROJECT_DIR}
+    - cd ${CI_PROJECT_DIR}/sources
+    - docker buildx build 
+      --platform linux/amd64,linux/arm64 
+      --tag ${CI_REGISTRY_IMAGE}:latest
+      --file ${CI_PROJECT_DIR}/docker/Dockerfile 
+      --push 
+      .
+  when: manual
+
+multi-arch-manifest:
+  stage: build:manifest
+  image: docker:latest
+  variables:
+    DOCKER_TLS_CERTDIR: "/certs"
+  services:
+    - name: docker:dind
+      command:
+        - "--experimental"
+  before_script:
+    - echo ${CI_REGISTRY_PASSWORD} | docker login -u ${CI_REGISTRY_USER} --password-stdin ${CI_REGISTRY}
+  script:
+    - docker manifest create ${CI_REGISTRY_IMAGE}:latest 
+        --amend ${CI_REGISTRY_IMAGE}:latest-amd64 
+        --amend ${CI_REGISTRY_IMAGE}:latest-arm64 
+    - docker manifest push ${CI_REGISTRY_IMAGE}:latest
+    - docker manifest inspect ${CI_REGISTRY_IMAGE}:latest
+  when: on_success
