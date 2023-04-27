@@ -38,6 +38,9 @@ export class Boerse {
         this.client = dgram.createSocket('udp4');
         this.connectedBank = bank;
         console.log(`connected to bank ${bank.name} at ${bank.ipAddress} on port ${bank.port}`);
+        this.client.on('message', (msg, rinfo) => {
+            console.log(msg.toString());
+        });
     }
     sendData(Wertpapier, count) {
         if (this.connectedBank) {

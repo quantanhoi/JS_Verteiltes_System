@@ -11,7 +11,9 @@ setInterval(() => {
     b1.addWerpapier(MSFT, 100);
     console.log(b1.wertpapiers);
     b1.sendData(MSFT, 50);
-}, 10);
+}, 1000);
+
+
 
 // const rl = createInterface({
 //     input: stdin,

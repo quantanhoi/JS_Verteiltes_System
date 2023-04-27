@@ -9,7 +9,7 @@ export class Bank {
         this.wertpapiers = new Map();
         this.gain = 0;
         this.port = port;
-        this.ipAddress = 'localhost';
+        this.ipAddress = 'startbank';
     }
     calculatePortfolio() {
         var gesamtPort = 0;
@@ -41,6 +41,14 @@ export class Bank {
             console.log(`Received data: ${msg.toString()}`);
             const parsedData = JSON.parse(msg.toString());
             this.receiveData(parsedData.wertpapier, parsedData.count);
+            const responseBuffer = Buffer.from(`Received from Boerse: ${rinfo.address}, on port ${rinfo.port} ${parsedData.wertpapier.kurzel}, ${parsedData.count}`);
+            server.send(responseBuffer, rinfo.port, rinfo.address, (err) => {
+                if (err) {
+                    console.log('Error sending response:', err);
+                } else {
+                    console.log("sent message to client");
+                }
+            });
         });
 
         server.on('listening', () => {
