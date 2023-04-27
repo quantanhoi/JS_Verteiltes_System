@@ -1,0 +1,17 @@
+# Use the official Node.js LTS image as the base
+FROM node:lts
+
+# Create a directory to hold the application code
+WORKDIR /app
+
+# Copy package.json and package-lock.json to the work directory
+COPY package*.json ./
+
+# Install any needed packages
+RUN npm install
+
+# Bundle app source
+COPY . .
+
+# Start the boerse client
+CMD ["node", "startBoerse.mjs"]

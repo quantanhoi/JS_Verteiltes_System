@@ -1,0 +1,11 @@
+{
+    "name": "distributed-system",
+    "version": "1.0.0",
+    "main": "startBank.mjs",
+    "scripts": {
+        "startBank": "node startBank.mjs",
+        "startBoerse": "node startBoerse.mjs"
+    },
+    "dependencies": {},
+    "devDependencies": {}
+}

@@ -1,5 +1,5 @@
 'use strict';
-import net from 'net';
+import dgram from 'dgram';
 import { Wertpapier, MSFT, LSFT } from './Wertpapier.mjs';
 import { Bank, firstBank } from './Bank.mjs';
 import { takeCoverage } from 'v8';
@@ -35,26 +35,25 @@ export class Boerse {
         }
     }
     connectToBank(bank) {
-        this.client = new net.Socket();
+        this.client = dgram.createSocket('udp4');
         this.connectedBank = bank;
-        this.client.connect(bank.port, bank.ipAddress, () => {
-            console.log(`connected to bank ${bank.name} at ${bank.ipAddress} on port ${bank.port}`);
-        });
-        this.client.on('close', () => {
-            console.log('Connection to Bank closed');
-        });
+        console.log(`connected to bank ${bank.name} at ${bank.ipAddress} on port ${bank.port}`);
     }
     sendData(Wertpapier, count) {
         if (this.connectedBank) {
-            if (this.addWerpapier(Wertpapier, (0 - count))) {
-                this.client.write(JSON.stringify({ wertpapier: Wertpapier, count: count }));
-                console.log(`sent data to Bank: ${Wertpapier.kurzel}, count: ${count}`);
-            }
-            else {
+            if (this.addWerpapier(Wertpapier, 0 - count)) {
+                const message = JSON.stringify({ wertpapier: Wertpapier, count: count });
+                this.client.send(message, 0, message.length, this.connectedBank.port, this.connectedBank.ipAddress, (err) => {
+                    if (err) {
+                        console.log('Error sending data:', err);
+                    } else {
+                        console.log(`sent data to Bank: ${Wertpapier.kurzel}, count: ${count}`);
+                    }
+                });
+            } else {
                 console.log('fail to send');
             }
-        }
-        else {
+        } else {
             console.log('No connected bank');
         }
     }

@@ -1,5 +1,5 @@
 'use strict';
-import net from 'net';
+import dgram from 'dgram';
 import { Wertpapier, MSFT, LSFT } from './Wertpapier.mjs';
 import { Socket } from 'dgram';
 export class Bank {
@@ -21,30 +21,34 @@ export class Bank {
         return this.portfolio
     }
     addWertPapier(Wertpapier, count) {
-        if (this.wertpapiers.has(Wertpapier)) {
-            const newCount = this.wertpapiers.get(Wertpapier) + count;
-            this.wertpapiers.set(Wertpapier, newCount);
+        let exists = false;
+        for (const [existingWertpapier, existingCount] of this.wertpapiers.entries()) {
+            if (existingWertpapier.kurzel === Wertpapier.kurzel) {
+                const newCount = existingCount + count;
+                this.wertpapiers.set(existingWertpapier, newCount);
+                exists = true;
+                break;
+            }
         }
-        else {
+        if (!exists) {
             this.wertpapiers.set(Wertpapier, count);
         }
         console.log(this.wertpapiers);
     }
     startServer() {
-        const server = net.createServer((socket) => {
-            console.log('Boerse connected');
-            socket.on('data', (data) => {
-                console.log('Received data: ', data.toString());
-                const parsedData = JSON.parse(data.toString());
-                this.receiveData(parsedData.wertpapier, parsedData.count);
-            });
-            socket.on('end', () => {
-                console.log('Boerse discornnected');
-            });
+        const server = dgram.createSocket('udp4');
+        server.on('message', (msg, rinfo) => {
+            console.log(`Received data: ${msg.toString()}`);
+            const parsedData = JSON.parse(msg.toString());
+            this.receiveData(parsedData.wertpapier, parsedData.count);
         });
-        server.listen(3000, () => {
-            console.log('Bank server listening on port 3000');
-        })
+
+        server.on('listening', () => {
+            const address = server.address();
+            console.log(`Bank server listening on ${address.address}:${address.port}`);
+        });
+
+        server.bind(3000);
     }
     receiveData(Wertpapier, count) {
         this.addWertPapier(Wertpapier, count);
