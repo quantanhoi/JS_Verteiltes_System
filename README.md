@@ -8,6 +8,7 @@ first change the directory into Praktikum folder
 cd Praktikum/
 ```
 Whenever you want to run docker file, you have to change this.ipAdress of Bank to a name you want
+However I only make docker file to test the 1. Praktikum (Boerse to Bank), For 2. to connect to the web I just test it with bank running in terminal (with ip.Address = 'localhost')
 ````
 export class Bank {
     constructor(name, port) {
