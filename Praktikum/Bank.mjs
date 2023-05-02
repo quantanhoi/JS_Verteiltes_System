@@ -1,6 +1,9 @@
 'use strict';
+//dgram for UDP
 import dgram from 'dgram';
+//express for HTTP
 import express from 'express';
+//Cors for Cross-Origin ressource sharing
 import cors from 'cors';
 import { Wertpapier, MSFT, LSFT } from './Wertpapier.mjs';
 import { Socket } from 'dgram';
