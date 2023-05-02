@@ -1,5 +1,7 @@
 'use strict';
 import dgram from 'dgram';
+import express from 'express';
+import cors from 'cors';
 import { Wertpapier, MSFT, LSFT } from './Wertpapier.mjs';
 import { Socket } from 'dgram';
 export class Bank {
@@ -9,7 +11,7 @@ export class Bank {
         this.wertpapiers = new Map();
         this.gain = 0;
         this.port = port;
-        this.ipAddress = 'startbank';
+        this.ipAddress = 'localhost';
     }
     calculatePortfolio() {
         var gesamtPort = 0;
@@ -63,6 +65,27 @@ export class Bank {
         console.log(`Received data from Boerse: ${Wertpapier.kurzel}, count: ${count}`);
         console.log(this.calculatePortfolio());
     }
+}
+
+export function startHttpServer(bank) {
+    const app = express();
+    const port = 8080;
+    app.use(express.json());
+    // Add CORS middleware (cross-origin resource sharing)
+    app.use(cors());
+    app.get('/bank/portfolio', (req, res) => {
+        res.json({ portfolio: bank.calculatePortfolio() });
+    });
+    app.post('/bank/addWertPapier', (req, res) => {
+        const { kurzel, count } = req.body;
+        const wertpapier = new Wertpapier(kurzel, 0);
+        bank.addWertPapier(wertpapier, count);
+        bank.calculatePortfolio();
+        res.status(200).send('Added WertPapier');
+    });
+    app.listen(port, () => {
+        console.log(`Bank HTTP server listening on port ${port}`);
+    });
 }
 
 

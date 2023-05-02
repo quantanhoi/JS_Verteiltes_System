@@ -6,6 +6,8 @@
         "startBank": "node startBank.mjs",
         "startBoerse": "node startBoerse.mjs"
     },
-    "dependencies": {},
-    "devDependencies": {}
+    "dependencies": {
+        "cors": "^2.8.5",
+        "express": "^4.18.2"
+    }
 }
