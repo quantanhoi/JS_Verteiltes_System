@@ -2,10 +2,25 @@
 
 ## Installation
 For the Praktikum
+
 first change the directory into Praktikum folder
 ```
 cd Praktikum/
 ```
+Whenever you want to run docker file, you have to change this.ipAdress of Bank to a name you want
+````
+export class Bank {
+    constructor(name, port) {
+        this.name = name;
+        this.portfolio = 0;
+        this.wertpapiers = new Map();
+        this.gain = 0;
+        this.port = port;
+        this.ipAddress = 'localhost';
+    }
+````
+change this.ipAddress from 'localhost' to 'startbank' to match with docker build below
+
 Build Docker startBank
 ```
 docker build -t startbank -f Dockerfile.startBank . 
