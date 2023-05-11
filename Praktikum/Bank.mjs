@@ -143,7 +143,7 @@ export class Bank {
                     const wertpapier = this.getWertpapierByKurzel(kurzel);
                     if (wertpapier) {
                         this.addWertPapier(wertpapier, count);
-                        this.sendJsonResponse(socket, { success: true });
+                        this.sendJsonRespo‚nse(socket, { success: true });
                     } else {
                         this.sendJsonResponse(socket, { success: false, message: 'Invalid Wertpapier Kurzel' });
                     }
@@ -171,8 +171,47 @@ export class Bank {
 
 
 
-    handlePostRequest() {
-        //TODO:
+    handlePostRequest(socket, path) {
+        // Read headers and request body
+        const requestData = socket.read();
+        const [requestLine, ...headerLines] = requestData.split('\r\n');
+        // Parse headers
+        const headers = headerLines.reduce((acc, line) => {
+            const [key, value] = line.split(': ');
+            acc[key] = value;
+            return acc;
+        }, {});
+        // Read request body based on Content-Length
+        const contentLength = parseInt(headers['Content-Length'], 10);
+        let requestBody = '';
+        socket.on('data', (data) => {
+            requestBody += data.toString();
+            if (requestBody.length >= contentLength) {
+                // Parse JSON data
+                const jsonData = JSON.parse(requestBody);
+                // Process JSON data based on the request path
+                if (path === '/bank/addWertPapier') {
+                    const { kurzel, count } = jsonData;
+                    const wertpapier = this.getWertpapierByKurzel(kurzel);
+                    if (wertpapier) {
+                        this.addWertPapier(wertpapier, count);
+                        this.sendJsonResponse(socket, { success: true });
+                    } else {
+                        this.sendJsonResponse(socket, { success: false, message: 'Invalid Wertpapier Kurzel' });
+                    }
+                } else {
+                    this.sendInvalidPathResponse(socket);
+                }
+            }
+        });
+    }
+
+    sendJsonResponse(socket, data) {
+        const jsonData = JSON.stringify(data);
+        const response = `HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: ${jsonData.length}\r\n\r\n${jsonData}`;
+        socket.write(response, () => {
+            socket.end();
+        });
     }
 
 

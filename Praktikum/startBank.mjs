@@ -6,4 +6,4 @@ firstBank.addWertPapier(LSFT, 50);
 console.log(firstBank.wertpapiers);
 console.log(firstBank.calculatePortfolio());
 firstBank.startServer();
-startHttpServer(firstBank);
+startHttpServer(firstBank);‚
