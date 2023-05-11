@@ -45,7 +45,7 @@ export class Boerse {
     sendData(Wertpapier, count) {
         if (this.connectedBank) {
             if (this.addWerpapier(Wertpapier, 0 - count)) {
-                const message = JSON.stringify({ wertpapier: Wertpapier, count: count });
+                const message = JSON.stringify({ wertpapier: Wertpapier, count: count, preis: Wertpapier.preis });
                 this.client.send(message, 0, message.length, this.connectedBank.port, this.connectedBank.ipAddress, (err) => {
                     if (err) {
                         console.log('Error sending data:', err);

@@ -10,6 +10,13 @@ import { Wertpapier, MSFT, LSFT } from './Wertpapier.mjs';
 import { Socket } from 'dgram';
 
 
+// MSFT.on('priceUpdated', (newPrice) => {
+//     console.log(`The new price of MSFT is: ${newPrice}`);
+// });
+
+// LSFT.on('priceUpdated', (newPrice) => {
+//     console.log(`The new price of LSFT is: ${newPrice}`);
+// });
 
 export class Bank {
     constructor(name, port) {
@@ -25,6 +32,7 @@ export class Bank {
 
 
     calculatePortfolio() {
+        console.log("Wertpapier price " + MSFT.kurzel + " " + MSFT.preis );
         var gesamtPort = 0;
         for (const [Wertpapier, count] of this.wertpapiers) {
             const sumWert = Wertpapier.preis * count;
@@ -35,12 +43,11 @@ export class Bank {
     }
 
 
-
-
-    addWertPapier(Wertpapier, count) {
+    addWertPapier(Wertpapier, count, preis) {
         let exists = false;
         for (const [existingWertpapier, existingCount] of this.wertpapiers.entries()) {
             if (existingWertpapier.kurzel === Wertpapier.kurzel) {
+                this.updateWertpapierPreis(existingWertpapier.kurzel, preis);
                 const newCount = existingCount + count;
                 this.wertpapiers.set(existingWertpapier, newCount);
                 exists = true;
@@ -53,7 +60,14 @@ export class Bank {
         console.log(this.wertpapiers);
     }
 
-
+    updateWertpapierPreis(kurzel, preis) {
+        for (const [existingWertpapier, existingCount] of this.wertpapiers.entries()) {
+            if (existingWertpapier.kurzel === kurzel) {
+                console.log("dsaddsadad" + existingWertpapier.kurzel);
+                existingWertpapier.updatePrice(preis);
+            }
+    }
+}
 
 
     startServer() {
@@ -65,8 +79,8 @@ export class Bank {
         server.on('message', (msg, rinfo) => {
             console.log(`Received data: ${msg.toString()}`);
             const parsedData = JSON.parse(msg.toString());
-            this.receiveData(parsedData.wertpapier, parsedData.count);
-            const responseBuffer = Buffer.from(`Received from Boerse: ${rinfo.address}, on port ${rinfo.port} ${parsedData.wertpapier.kurzel}, ${parsedData.count}`);
+            this.receiveData(parsedData.wertpapier, parsedData.count, parsedData.preis);
+            const responseBuffer = Buffer.from(`Received from Boerse 1234: ${rinfo.address}, on port ${rinfo.port} ${parsedData.wertpapier.kurzel}, ${parsedData.count}`);
             //send a reponse back to client
             server.send(responseBuffer, rinfo.port, rinfo.address, (err) => {
                 if (err) {
@@ -88,15 +102,21 @@ export class Bank {
 
 
 
-    receiveData(Wertpapier, count) {
-        this.addWertPapier(Wertpapier, count);
+    receiveData(Wertpapier, count, preis) {
+        for(let [wertpapier, existingCount] of this.wertpapiers) {
+            if(Wertpapier.kurzel === wertpapier.kurzel) {
+                this.addWertPapier(Wertpapier, count, preis);
+            }
+        }
         console.log(`Received data from Boerse: ${Wertpapier.kurzel}, count: ${count}`);
         console.log(this.calculatePortfolio());
     }
 
+    
 
 
 
+    //aufgabe 2
     startHttpServer() {
         const server = net.createServer((socket) => {
             let requestData = '';
@@ -138,8 +158,8 @@ export class Bank {
             console.log('HTTP server listening on port 8080');
         });
     }
-    
-    
+
+
 
 
 
@@ -193,7 +213,7 @@ export class Bank {
         ].join('\r\n');
         socket.write(response);
     }
-    
+
 
 
     getWertpapierByKurzel(kurzel) {
@@ -227,13 +247,13 @@ export class Bank {
         // Read request body based on Content-Length
         const contentLength = parseInt(headers['Content-Length'], 10);
         const requestBody = requestData.split('\r\n\r\n')[1];
-    
+
         // Check if there's extra data and remove it
         const jsonStartIndex = requestBody.indexOf('{');
         if (jsonStartIndex > 0) {
             requestBody = requestBody.substring(jsonStartIndex);
         }
-    
+
         if (requestBody.length >= contentLength) {
             // Parse JSON data
             const jsonData = JSON.parse(requestBody);
@@ -252,8 +272,8 @@ export class Bank {
             }
         }
     }
-    
-    
+
+
 
     sendJsonResponse(socket, data) {
         const jsonResponse = JSON.stringify(data);
@@ -269,8 +289,8 @@ export class Bank {
         ].join('\r\n');
         socket.write(response);
     }
-    
-    
+
+
 
 
 

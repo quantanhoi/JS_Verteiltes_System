@@ -1,56 +1,38 @@
 <!DOCTYPE html>
 <html>
-
-<head>
-  <title>Bank Interface</title>
+  <head>
+    <title>Bank Interface</title>
+    <script>
+      async function getPortfolio() {
+        const response = await fetch('http://localhost:8080/bank/portfolio');
+        const data = await response.json();
+        document.getElementById('portfolio').innerText = `Portfolio: ${data.portfolio}`;
+      }
+      async function addWertPapier() {
+        const kurzel = document.getElementById('kurzel').value;
+        const count = parseInt(document.getElementById('count').value);
+        await fetch('http://localhost:8080/bank/addWertPapier', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ kurzel, count }),
+        });
+        getPortfolio();
+      }
+    </script>
+  </head>
+  <body>
+    <h1>Bank Interface</h1>
+    <div id="portfolio">Portfolio:</div>
+    <div>
+      <input id="kurzel" placeholder="Wertpapier Kurzel" />
+      <input id="count" type="number" placeholder="Count" />
+      <button onclick="addWertPapier()">Add Wertpapier</button>
+    </div>
+  </body>
   <script>
-    async function getPortfolio() {
-      const response = await fetch('http://localhost:8080/bank/portfolio');
-
-      // Check if the response has content
-      if (response.status === 204) {
-        console.log('No content');
-        return;
-      }
-
-      // Check if the response is in JSON format
-      const contentType = response.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
-        console.log('The response is not JSON:', await response.text());
-        return;
-      }
-
-      const data = await response.json();
-      document.getElementById('portfolio').innerText = `Portfolio: ${data.portfolio}`;
-    }
-    async function addWertPapier() {
-      const kurzel = document.getElementById('kurzel').value;
-      const count = parseInt(document.getElementById('count').value);
-      await fetch('http://localhost:8080/bank/addWertPapier', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ kurzel, count }),
-      });
-      getPortfolio();
-      console.log("test");
-    }
+    // Call getPortfolio() when the page loads
+    getPortfolio();
   </script>
-</head>
-
-<body>
-  <h1>Bank Interface</h1>
-  <div id="portfolio">Portfolio:</div>
-  <div>
-    <input id="kurzel" placeholder="Wertpapier Kurzel" />
-    <input id="count" type="number" placeholder="Count" />
-    <button onclick="addWertPapier()">Add Wertpapier</button>
-  </div>
-</body>
-<script>
-  // Call getPortfolio() when the page loads
-  getPortfolio();
-</script>
-
 </html>
