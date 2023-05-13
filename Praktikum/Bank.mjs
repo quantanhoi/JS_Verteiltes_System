@@ -8,6 +8,7 @@ import net from 'net';
 import cors from 'cors';
 import { Wertpapier, MSFT, LSFT } from './Wertpapier.mjs';
 import { Socket } from 'dgram';
+import http from 'http';
 
 
 // MSFT.on('priceUpdated', (newPrice) => {
@@ -26,13 +27,14 @@ export class Bank {
         this.gain = 0;
         this.port = port;
         this.ipAddress = 'localhost';
+        this.count = 0;
     }
 
 
 
 
     calculatePortfolio() {
-        console.log("Wertpapier price " + MSFT.kurzel + " " + MSFT.preis );
+        console.log("Wertpapier price " + MSFT.kurzel + " " + MSFT.preis);
         var gesamtPort = 0;
         for (const [Wertpapier, count] of this.wertpapiers) {
             const sumWert = Wertpapier.preis * count;
@@ -57,17 +59,16 @@ export class Bank {
         if (!exists) {
             this.wertpapiers.set(Wertpapier, count);
         }
-        console.log(this.wertpapiers);
     }
 
     updateWertpapierPreis(kurzel, preis) {
         for (const [existingWertpapier, existingCount] of this.wertpapiers.entries()) {
             if (existingWertpapier.kurzel === kurzel) {
-                console.log("dsaddsadad" + existingWertpapier.kurzel);
+                // console.log("dsaddsadad" + existingWertpapier.kurzel);
                 existingWertpapier.updatePrice(preis);
             }
+        }
     }
-}
 
 
     startServer() {
@@ -77,7 +78,7 @@ export class Bank {
         //msg: buffer containing the incoming message 
         //rinfo: containing sender's address, port, size of datagram
         server.on('message', (msg, rinfo) => {
-            console.log(`Received data: ${msg.toString()}`);
+            // console.log(`Received data: ${msg.toString()}`);
             const parsedData = JSON.parse(msg.toString());
             this.receiveData(parsedData.wertpapier, parsedData.count, parsedData.preis);
             const responseBuffer = Buffer.from(`Received from Boerse 1234: ${rinfo.address}, on port ${rinfo.port} ${parsedData.wertpapier.kurzel}, ${parsedData.count}`);
@@ -103,8 +104,8 @@ export class Bank {
 
 
     receiveData(Wertpapier, count, preis) {
-        for(let [wertpapier, existingCount] of this.wertpapiers) {
-            if(Wertpapier.kurzel === wertpapier.kurzel) {
+        for (let [wertpapier, existingCount] of this.wertpapiers) {
+            if (Wertpapier.kurzel === wertpapier.kurzel) {
                 this.addWertPapier(Wertpapier, count, preis);
             }
         }
@@ -112,7 +113,7 @@ export class Bank {
         console.log(this.calculatePortfolio());
     }
 
-    
+
 
 
 
@@ -122,7 +123,8 @@ export class Bank {
             let requestData = '';
             socket.on('data', (data) => {
                 requestData += data.toString();
-                console.log("requested: " + requestData);
+                console.log(`requested ${this.count}: ` + requestData);
+                this.count++;
                 // Check if the end of the headers has been reached
                 const headerEndIndex = requestData.indexOf('\r\n\r\n');
                 if (headerEndIndex !== -1) {
@@ -140,26 +142,37 @@ export class Bank {
                             // All of the body has been received, handle the request
                             if (method === 'OPTIONS') {
                                 this.handleOptionsRequest(socket);
+                                requestData = '';
                             }
                             // handle other methods...
                             else if (method === 'GET') {
                                 this.handleGetRequest(socket, path, requestData);
+                                requestData = '';
                             } else if (method === 'POST') {
                                 this.handlePostRequest(socket, path, requestData);
+                                requestData = '';
                             } else {
                                 this.sendInvalidMethodResponse(socket);
+                                requestData = '';
                             }
                         }
                     }
                 }
+            });
+            socket.on('error', function (err) {
+                if (err.code === 'EPIPE') {
+                    console.log('Client closed connection');
+                }
+                else {
+                    console.error('Socket error', err);
+                }
+                socket.destroy();
             });
         });
         server.listen(8080, () => {
             console.log('HTTP server listening on port 8080');
         });
     }
-
-
 
 
 
@@ -211,14 +224,13 @@ export class Bank {
             'Content-Length: 0',
             '\r\n'
         ].join('\r\n');
+        console.log("socket write option");
         socket.write(response);
     }
 
 
 
     getWertpapierByKurzel(kurzel) {
-        // Add your logic to get Wertpapier by its Kurzel
-        // This is just an example, you can implement it differently based on your requirements
         if (kurzel === 'MSFT') {
             return MSFT;
         } else if (kurzel === 'LSFT') {
@@ -232,6 +244,7 @@ export class Bank {
 
 
     handlePostRequest(socket, path, requestData) {
+        console.log("handling post request");
         // console.log("request: " + requestData)
         if (requestData === null) {
             console.error("requestData is null");
@@ -247,21 +260,31 @@ export class Bank {
         // Read request body based on Content-Length
         const contentLength = parseInt(headers['Content-Length'], 10);
         const requestBody = requestData.split('\r\n\r\n')[1];
-
+        try {
+            JSON.parse(requestBody);
+        } catch (e) {
+            console.error('Invalid JSON:', requestBody);
+            console.log("asddasdsdasda");
+            this.sendInvalidPathResponse(socket);
+            return;
+        }
         // Check if there's extra data and remove it
         const jsonStartIndex = requestBody.indexOf('{');
         if (jsonStartIndex > 0) {
             requestBody = requestBody.substring(jsonStartIndex);
         }
-
+        console.log('request body: ' + requestBody);
         if (requestBody.length >= contentLength) {
             // Parse JSON data
             const jsonData = JSON.parse(requestBody);
+            // console.log(jsonData);
             // Process JSON data based on the request path
             if (path === '/bank/addWertPapier') {
                 const { kurzel, count } = jsonData;
                 const wertpapier = this.getWertpapierByKurzel(kurzel);
                 if (wertpapier) {
+                    console.log("adding wertpapier...");
+                    console.log(wertpapier + " " + count);
                     this.addWertPapier(wertpapier, count);
                     this.sendJsonResponse(socket, { success: true });
                 } else {
@@ -271,6 +294,7 @@ export class Bank {
                 this.sendInvalidPathResponse(socket);
             }
         }
+        console.log('ok post request');
     }
 
 
@@ -287,7 +311,9 @@ export class Bank {
             '', // blank line required by HTTP protocol
             jsonResponse
         ].join('\r\n');
+        console.log("socket write sendJsonResponse");
         socket.write(response);
+        console.log('ok send json request');
     }
 
 
@@ -297,11 +323,44 @@ export class Bank {
 
     sendInvalidMethodResponse(socket) {
         const response = 'HTTP/1.1 error 405 method not allowed \r\nContent: 0\r\n\r\n';
+        console.log("socket write sendInvalidMethodResponse");
         socket.write(response, () => {
             socket.end();
         });
     }
+    sendResponse(socket, statusCode, headers = {}, body = '') {
+        headers = {
+            ...headers,
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type'
+        };
+        const statusLine = `HTTP/1.1 ${statusCode} ${http.STATUS_CODES[statusCode]}`;
+        const headerLines = Object.entries(headers).map(([key, value]) => `${key}: ${value}`);
+        const response = [statusLine, ...headerLines, '', body].join('\r\n');
+        console.log("socket write SendResponse");
+        socket.write(response, 'utf-8', () => {
+            socket.end();
+        });
+    }
+    
+    sendInvalidPathResponse(socket) {
+        const response = 'HTTP/1.1 404 Not Found\r\n' +
+            'Content-Type: application/json\r\n' +
+            'Access-Control-Allow-Origin: *\r\n' +
+            '\r\n' +
+            JSON.stringify({ error: 'Invalid path' }) + '\r\n';
+        console.log("socket write sendInvalidPathResponse");
+        socket.write(response, 'utf-8', () => {
+            socket.end();
+        });
+    }
+    
+
+
 }
+
+
 
 
 //HTTP server code guideline, do not use
