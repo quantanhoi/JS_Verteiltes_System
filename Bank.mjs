@@ -53,6 +53,8 @@ export class Bank {
                 const newCount = existingCount + count;
                 this.wertpapiers.set(existingWertpapier, newCount);
                 exists = true;
+                console.log(this.wertpapiers);
+                console.log(this.calculatePortfolio());
                 break;
             }
         }
@@ -277,15 +279,16 @@ export class Bank {
         if (requestBody.length >= contentLength) {
             // Parse JSON data
             const jsonData = JSON.parse(requestBody);
-            // console.log(jsonData);
+            console.log(jsonData);
             // Process JSON data based on the request path
             if (path === '/bank/addWertPapier') {
                 const { kurzel, count } = jsonData;
+                console.log("kurzel" + kurzel);
                 const wertpapier = this.getWertpapierByKurzel(kurzel);
                 if (wertpapier) {
                     console.log("adding wertpapier...");
-                    console.log(wertpapier + " " + count);
-                    this.addWertPapier(wertpapier, count);
+                    console.log(wertpapier.kurzel + " " + wertpapier.preis + " " + count);
+                    this.addWertPapier(wertpapier, count, wertpapier.preis);
                     this.sendJsonResponse(socket, { success: true });
                 } else {
                     this.sendJsonResponse(socket, { success: false, message: 'Invalid Wertpapier Kurzel' });
