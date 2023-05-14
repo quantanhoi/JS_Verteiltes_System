@@ -4,11 +4,13 @@
 <head>
   <title>Bank Interface</title>
   <script>
-    // async function getPortfolio() {
-    //   const response = await fetch('http://localhost:8080/bank/portfolio');
-    //   const data = await response.json();
-    //   document.getElementById('portfolio').innerText = `Portfolio: ${data.portfolio}`;
-    // }
+    async function getPortfolio() {
+    const response = await fetch('http://localhost:8080/bank/portfolio');
+    const data = await response.json();
+    console.log("portfolio: ", data);
+    let displayData = typeof data === 'object' ? JSON.stringify(data) : data;
+    document.getElementById('portfolio').innerText = `Portfolio: ${displayData}`;
+}
     async function addWertPapier() {
       const kurzel = document.getElementById('kurzel').value;
       const count = parseInt(document.getElementById('count').value);
@@ -23,12 +25,14 @@
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }
+        else {
+            getPortfolio();
+        }
         console.log(response);
       } catch (error) {
         console.error('There has been a problem with your fetch operation:', error);
       }
     }
-
   </script>
 </head>
 
@@ -43,7 +47,7 @@
 </body>
 <script>
   // Call getPortfolio() when the page loads
-  // getPortfolio();
+  getPortfolio();
 </script>
 
 </html>

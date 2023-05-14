@@ -142,6 +142,7 @@ export class Bank {
                         const body = requestData.substring(headerEndIndex + 4);
                         if (body.length >= length) {
                             // All of the body has been received, handle the request
+                            console.log(`method ${this.count -1 }: ` + method);
                             if (method === 'OPTIONS') {
                                 this.handleOptionsRequest(socket);
                                 requestData = '';
@@ -157,6 +158,13 @@ export class Bank {
                                 this.sendInvalidMethodResponse(socket);
                                 requestData = '';
                             }
+                        }
+                    }
+                    //if content-length = 0
+                    else {
+                        if(method === 'GET') {
+                            this.handleGetRequest(socket, path, requestData);
+                            requestData = '';
                         }
                     }
                 }
@@ -178,45 +186,72 @@ export class Bank {
 
 
 
-
-    handleGetRequest(socket, path, requestData) {
-        if (requestData === null) {
-            console.error("requestData is null");
-            return;
-        }
-        const [requestLine, ...headerLines] = requestData.split('\r\n');
-        //parse header:
-        const headers = headerLines.reduce((acc, line) => {
-            const [key, value] = line.split(': ');
-            acc[key] = value;
-            return acc;
-        }, {});
-        // Read request body based on Content-Length
-        const contentLength = parseInt(headers['Content-Length'], 10);
-        let requestBody = '';
-        socket.on('data', (data) => {
-            requestBody += data.toString();
-            if (requestBody.length >= contentLength) {
-                // Parse JSON data
-                const jsonData = JSON.parse(requestBody);
-                // Process JSON data based on the request path
-                if (path === '/bank/addWertPapier') {
-                    const { kurzel, count } = jsonData;
-                    const wertpapier = this.getWertpapierByKurzel(kurzel);
-                    if (wertpapier) {
-                        this.addWertPapier(wertpapier, count);
-                        this.sendJsonResponse(socket, { success: true });
-                    } else {
-                        this.sendJsonResponse(socket, { success: false, message: 'Invalid Wertpapier Kurzel' });
-                    }
-                } else {
-                    this.sendInvalidPathResponse(socket);
-                }
+    // Method for handling Get Request
+    // handleGetRequest(socket, path, requestData) {
+    //     console.log("handling get request");
+    //     if (requestData === null) {
+    //         console.error("requestData is null");
+    //         return;
+    //     }
+    //     const [requestLine, ...headerLines] = requestData.split('\r\n');
+    //     //parse header:
+    //     const headers = headerLines.reduce((acc, line) => {
+    //         const [key, value] = line.split(': ');
+    //         acc[key] = value;
+    //         return acc;
+    //     }, {});
+    //     console.log("path1: " + path);
+    //     // Read request body based on Content-Length
+    //     const contentLength = parseInt(headers['Content-Length'], 10);
+    //     let requestBody = '';
+    //     socket.on('data', (data) => {
+    //         requestBody += data.toString();
+    //         if (requestBody.length >= contentLength) {
+    //             // Parse JSON data
+    //             const jsonData = JSON.parse(requestBody);
+    //             // Process JSON data based on the request path
+    //             console.log("path2: " + path);
+    //             if (path === '/bank/addWertPapier') {
+    //                 const { kurzel, count } = jsonData;
+    //                 const wertpapier = this.getWertpapierByKurzel(kurzel);
+    //                 if (wertpapier) {
+    //                     this.addWertPapier(wertpapier, count);
+    //                     this.sendJsonResponse(socket, { success: true });
+    //                 } else {
+    //                     this.sendJsonResponse(socket, { success: false, message: 'Invalid Wertpapier Kurzel' });
+    //                 }
+    //             }
+    //             else if (path == '/bank/portfolio') {
+    //                 console.log("checking portfolio...");
+    //                 const portfolio = this.getPortfolio();
+    //                 this.sendJsonResponse(socket, portfolio);
+    //             }
+    //             else {
+    //                 this.sendInvalidPathResponse(socket);
+    //             }
+    //         }
+    //     });
+    //     //TODO:
+    // }
+    handleGetRequest(socket, path) {
+        console.log("handling get request");
+        if (path === '/bank/portfolio') {
+            const portfolio = this.calculatePortfolio();
+            this.sendJsonResponse(socket, portfolio);
+        } else if (path.startsWith('/bank/wertpapier/')) {
+            const kurzel = path.substring('/bank/wertpapier/'.length);
+            const wertpapier = this.getWertpapierByKurzel(kurzel);
+            if (wertpapier) {
+                this.sendJsonResponse(socket, { wertpapier });
+            } else {
+                this.sendJsonResponse(socket, { success: false, message: 'Invalid Wertpapier Kurzel' });
             }
-        });
-        //TODO:
+        } else {
+            this.sendInvalidPathResponse(socket);
+        }
     }
 
+    // Method for handling Option requests
     handleOptionsRequest(socket) {
         const response = [
             'HTTP/1.1 200 OK',
@@ -243,8 +278,7 @@ export class Bank {
     }
 
 
-
-
+    // Method for Handling Post requests
     handlePostRequest(socket, path, requestData) {
         console.log("handling post request");
         // console.log("request: " + requestData)
@@ -320,10 +354,6 @@ export class Bank {
     }
 
 
-
-
-
-
     sendInvalidMethodResponse(socket) {
         const response = 'HTTP/1.1 error 405 method not allowed \r\nContent: 0\r\n\r\n';
         console.log("socket write sendInvalidMethodResponse");
@@ -346,7 +376,7 @@ export class Bank {
             socket.end();
         });
     }
-    
+
     sendInvalidPathResponse(socket) {
         const response = 'HTTP/1.1 404 Not Found\r\n' +
             'Content-Type: application/json\r\n' +
@@ -358,7 +388,7 @@ export class Bank {
             socket.end();
         });
     }
-    
+
 
 
 }
