@@ -11,13 +11,6 @@ import { Socket } from 'dgram';
 import http from 'http';
 
 
-// MSFT.on('priceUpdated', (newPrice) => {
-//     console.log(`The new price of MSFT is: ${newPrice}`);
-// });
-
-// LSFT.on('priceUpdated', (newPrice) => {
-//     console.log(`The new price of LSFT is: ${newPrice}`);
-// });
 
 export class Bank {
     constructor(name, port) {
@@ -184,55 +177,6 @@ export class Bank {
         });
     }
 
-
-
-    // Method for handling Get Request
-    // handleGetRequest(socket, path, requestData) {
-    //     console.log("handling get request");
-    //     if (requestData === null) {
-    //         console.error("requestData is null");
-    //         return;
-    //     }
-    //     const [requestLine, ...headerLines] = requestData.split('\r\n');
-    //     //parse header:
-    //     const headers = headerLines.reduce((acc, line) => {
-    //         const [key, value] = line.split(': ');
-    //         acc[key] = value;
-    //         return acc;
-    //     }, {});
-    //     console.log("path1: " + path);
-    //     // Read request body based on Content-Length
-    //     const contentLength = parseInt(headers['Content-Length'], 10);
-    //     let requestBody = '';
-    //     socket.on('data', (data) => {
-    //         requestBody += data.toString();
-    //         if (requestBody.length >= contentLength) {
-    //             // Parse JSON data
-    //             const jsonData = JSON.parse(requestBody);
-    //             // Process JSON data based on the request path
-    //             console.log("path2: " + path);
-    //             if (path === '/bank/addWertPapier') {
-    //                 const { kurzel, count } = jsonData;
-    //                 const wertpapier = this.getWertpapierByKurzel(kurzel);
-    //                 if (wertpapier) {
-    //                     this.addWertPapier(wertpapier, count);
-    //                     this.sendJsonResponse(socket, { success: true });
-    //                 } else {
-    //                     this.sendJsonResponse(socket, { success: false, message: 'Invalid Wertpapier Kurzel' });
-    //                 }
-    //             }
-    //             else if (path == '/bank/portfolio') {
-    //                 console.log("checking portfolio...");
-    //                 const portfolio = this.getPortfolio();
-    //                 this.sendJsonResponse(socket, portfolio);
-    //             }
-    //             else {
-    //                 this.sendInvalidPathResponse(socket);
-    //             }
-    //         }
-    //     });
-    //     //TODO:
-    // }
     handleGetRequest(socket, path) {
         console.log("handling get request");
         if (path === '/bank/portfolio') {
@@ -339,11 +283,11 @@ export class Bank {
     sendJsonResponse(socket, data) {
         const jsonResponse = JSON.stringify(data);
         const response = [
-            'HTTP/1.1 200 OK', // include HTTP version here
+            'HTTP/1.1 200 OK', 
             'Content-Type: application/json',
-            'Access-Control-Allow-Origin: *',  // Add this line
-            'Access-Control-Allow-Methods: GET, POST, OPTIONS',  // Add this line
-            'Access-Control-Allow-Headers: Content-Type',  // Add this line
+            'Access-Control-Allow-Origin: *',  
+            'Access-Control-Allow-Methods: GET, POST, OPTIONS',  
+            'Access-Control-Allow-Headers: Content-Type',  
             'Content-Length: ' + Buffer.byteLength(jsonResponse),
             '', // blank line required by HTTP protocol
             jsonResponse
