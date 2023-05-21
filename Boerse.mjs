@@ -52,7 +52,7 @@ export class Boerse {
                     if (err) {
                         console.log('Error sending data:', err);
                     } else {
-                        this.sendData++;
+                        this.countSent++;
                         console.log(`sent data to Bank: ${Wertpapier.kurzel}, count: ${count}`);
                     }
                 });

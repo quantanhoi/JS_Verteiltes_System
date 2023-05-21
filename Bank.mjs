@@ -91,8 +91,8 @@ export class Bank {
             const address = server.address();
             console.log(`Bank server listening on ${address.address}:${address.port}`);
         });
-        //server start listening for incoming data gram on port 3000
-        server.bind(3000);
+        //server start listening for incoming data gram ipAddress:port
+        server.bind(3000, this.ipAddress);
     }
 
 
@@ -112,7 +112,7 @@ export class Bank {
 
 
 
-    //aufg˚be 2
+    //aufgabe 2
     startHttpServer() {
         const server = net.createServer((socket) => {
             let requestData = '';
