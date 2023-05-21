@@ -14,7 +14,7 @@ setInterval(() => {
     b1.addWerpapier(MSFT, 1);
     console.log(b1.wertpapiers);
     b1.sendData(MSFT, 1);
-}, 1000);
+}, 10);
 
 
 

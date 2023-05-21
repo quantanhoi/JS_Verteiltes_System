@@ -8,6 +8,8 @@ export class Boerse {
         this.wertpapiers = new Map();
         this.connectedBank = null;
         this.client;
+        this.countSent = 0;
+        this.countReceived = 0;
     }
     addWerpapier(Wertpapier, count) {
         if (count >= 0) {
@@ -50,6 +52,7 @@ export class Boerse {
                     if (err) {
                         console.log('Error sending data:', err);
                     } else {
+                        this.sendData++;
                         console.log(`sent data to Bank: ${Wertpapier.kurzel}, count: ${count}`);
                     }
                 });

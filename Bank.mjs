@@ -112,7 +112,7 @@ export class Bank {
 
 
 
-    //aufgabe 2
+    //aufg˚be 2
     startHttpServer() {
         const server = net.createServer((socket) => {
             let requestData = '';
@@ -364,5 +364,6 @@ export function startHttpServer(bank) {
 
 
 export const firstBank = new Bank('firstBank', 3000);
+export const secondBank = new Bank('secondBank', 4000);
 
 
