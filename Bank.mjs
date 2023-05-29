@@ -159,6 +159,10 @@ export class Bank {
                             this.handleGetRequest(socket, path, requestData);
                             requestData = '';
                         }
+                        if (method === 'OPTIONS') {
+                            this.handleOptionsRequest(socket);
+                            requestData = '';
+                        }
                     }
                 }
             });
