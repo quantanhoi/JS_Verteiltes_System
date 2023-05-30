@@ -1,0 +1,56 @@
+syntax = "proto3";
+
+package bank;
+
+// The Wertpapier message represents a security to be transferred
+message Wertpapier {
+  string kurzel = 1;
+  int32 count = 2;
+  double preis = 3;
+}
+
+// The Bank message represents a bank in the system
+message Bank {
+  string name = 1;
+  int32 port = 2;
+}
+
+// The TransferRequest message represents a request to transfer a Wertpapier
+message TransferRequest {
+  Bank sender = 1;
+  Bank receiver = 2;
+  Wertpapier wertpapier = 3;
+}
+
+// The TransferResponse message represents a response to a Wertpapier transfer request
+message TransferResponse {
+  string status = 1;
+}
+
+// Request for calculating portfolio
+message CalculatePortfolioRequest {
+  // Add fields here if needed
+}
+
+// Response for calculating portfolio
+message CalculatePortfolioResponse {
+  double totalValue = 1;  // Assuming the response includes the total value of the portfolio
+}
+
+// Request for adding Wertpapier
+message AddWertpapierRequest {
+  Wertpapier wertpapier = 1; // Assuming you want to include a Wertpapier in the request
+  int32 quantity = 2; // Assuming you want to specify a quantity to add
+}
+
+// Response for adding Wertpapier
+message AddWertpapierResponse {
+  bool success = 1; // Assuming you want to indicate whether the addition was successful
+}
+
+// The BankService provides operations for transferring Wertpapiers
+service BankService {
+  rpc CalculatePortfolio(CalculatePortfolioRequest) returns (CalculatePortfolioResponse);
+  rpc AddWertpapier(AddWertpapierRequest) returns (AddWertpapierResponse);
+  rpc TransferWertpapier(TransferRequest) returns (TransferResponse);
+}

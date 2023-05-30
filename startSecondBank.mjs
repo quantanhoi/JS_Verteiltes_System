@@ -1,0 +1,10 @@
+'use strict';
+import {Bank, secondBank} from './Bank.mjs';
+import { Wertpapier, MSFT, LSFT } from './Wertpapier.mjs';
+secondBank.addWertPapier(MSFT, 100);
+secondBank.addWertPapier(LSFT, 50);
+console.log(secondBank.wertpapiers);
+console.log(secondBank.calculatePortfolio());
+secondBank.startServer();
+secondBank.startHttpServer();
+secondBank.startGrpcServer();

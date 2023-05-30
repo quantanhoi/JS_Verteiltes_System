@@ -36,3 +36,8 @@ Build Docker File
 ```
 docker run --name startboerse --link startbank startboerse
 ```
+
+For Praktikum 3, install gRPC for nodeJS
+```
+npm install @grpc/grpc-js @grpc/proto-loader
+```
