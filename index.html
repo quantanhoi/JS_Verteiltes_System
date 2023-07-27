@@ -5,12 +5,20 @@
   <title>Bank Interface</title>
   <script>
     async function getPortfolio() {
-    const response = await fetch('http://localhost:8080/bank/portfolio');
-    const data = await response.json();
-    console.log("portfolio: ", data);
-    let displayData = typeof data === 'object' ? JSON.stringify(data) : data;
-    document.getElementById('portfolio').innerText = `Portfolio: ${displayData}`;
-}
+      const response = await fetch('http://localhost:8080/bank/portfolio');
+      const data = await response.json();
+      console.log("portfolio: ", data);
+      let displayData = typeof data === 'object' ? JSON.stringify(data) : data;
+      document.getElementById('portfolio').innerText = `Portfolio: ${displayData}`;
+    }
+    async function requestHelp() {
+      try {
+        await fetch('http://localhost:8080/bank/requestHelp');
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    }
+
     async function addWertPapier() {
       const kurzel = document.getElementById('kurzel').value;
       const count = parseInt(document.getElementById('count').value);
@@ -26,13 +34,76 @@
           throw new Error('Network response was not ok');
         }
         else {
-            getPortfolio();
+          getPortfolio();
         }
         console.log(response);
       } catch (error) {
         console.error('There has been a problem with your fetch operation:', error);
       }
     }
+    async function transferFunds() {
+      const kurzel = document.getElementById('kurzel').value;
+      const count = parseInt(document.getElementById('count').value);
+      const request = {
+        source_bank: 'firstbank',
+        target_bank: 'secondbank',
+        requestedWertpapier: {
+          kurzel: kurzel,
+          preis: 300
+        },
+        amount: count
+      };
+      try {
+        const response = await fetch('http://localhost:8080/bank/transferFunds', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(request),
+        });
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        else {
+          getPortfolio();
+        }
+      } catch (error) {
+        console.error('There has been a problem with your fetch operation:', error);
+      }
+    }
+
+    async function requestLoan() {
+      const kurzel = document.getElementById('kurzel').value;
+      const count = parseInt(document.getElementById('count').value);
+      const request = {
+        borrowing_bank: 'firstbank',
+        lending_bank: 'secondbank',
+        requestedWertpapier: {
+          kurzel: kurzel,
+          preis: 300
+        },
+        amount: count
+      };
+      try {
+        const response = await fetch('http://localhost:8080/bank/requestLoan', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(request),
+        });
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        else {
+          getPortfolio();
+        }
+      } catch (error) {
+        console.error('There has been a problem with your fetch operation:', error);
+      }
+    }
+
+
   </script>
 </head>
 
@@ -43,6 +114,9 @@
     <input id="kurzel" placeholder="Wertpapier Kurzel" />
     <input id="count" type="number" placeholder="Count" />
     <button onclick="addWertPapier()">Add Wertpapier</button>
+    <button onclick="transferFunds()">Transfer Funds</button>
+    <button onclick="requestLoan()">Request Loan</button>
+    <button onclick="requestHelp()">Request Help</button>
   </div>
 </body>
 <script>

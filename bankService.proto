@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+service BankService {
+    rpc RequestLoan(LoanRequest) returns (LoanResponse);
+    rpc TransferFunds(TransferRequest) returns (TransferResponse);
+}
+
+message Wertpapier {
+    string kurzel = 1;
+    double preis = 2;
+}
+
+message LoanRequest {
+    string lending_bank = 1;
+    string borrowing_bank = 2;
+    Wertpapier requestedWertpapier = 3;
+    double amount = 4;
+}
+
+message LoanResponse {
+    bool approved = 1;
+    string message = 2;
+}
+
+message TransferRequest {
+    string source_bank = 1;
+    string target_bank = 2;
+    Wertpapier requestedWertpapier = 3;
+    double amount = 4;
+}
+
+message TransferResponse {
+    bool success = 1;
+    string message = 2;
+}

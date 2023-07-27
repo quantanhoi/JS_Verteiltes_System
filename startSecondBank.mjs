@@ -7,4 +7,7 @@ console.log(secondBank.wertpapiers);
 console.log(secondBank.calculatePortfolio());
 secondBank.startServer();
 secondBank.startHttpServer();
-secondBank.startGrpcServer();
+secondBank.startGRPC();
+secondBank.addClient('firstBank', 50051);
+secondBank.addClient('thirdBank', 50055);
+secondBank.startMQTTClient();

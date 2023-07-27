@@ -1,0 +1,13 @@
+'use strict';
+import { Bank, thirdBank } from './Bank.mjs';
+import { Wertpapier, MSFT, LSFT } from './Wertpapier.mjs';
+thirdBank.addWertPapier(MSFT, 100);
+thirdBank.addWertPapier(LSFT, 50);
+console.log(thirdBank.wertpapiers);
+console.log(thirdBank.calculatePortfolio());
+thirdBank.startServer();
+thirdBank.startHttpServer();
+thirdBank.startGRPC();
+thirdBank.addClient('firstBank', 50051);
+thirdBank.addClient('secondBank', 50053);
+thirdBank.startMQTTClient();
