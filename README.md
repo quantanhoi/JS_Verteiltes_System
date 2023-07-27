@@ -1,4 +1,7 @@
 # Verteiltes System Praktikum + Code Beispiele
+This is solution for Distributed System Praktikum which contains implementation of pure udp, building http with pure tcp, remote procedure calls (gRPC) and MQTT for Message oriented middleware (using hiveMQ as broker)   
+
+Praktikumsaufgaben: [Verteiltes System Praktikum](vs_praktikum.pdf)
 
 ## Installation
 For the Praktikum
